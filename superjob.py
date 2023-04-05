@@ -1,67 +1,64 @@
-import os
+from time import sleep
 
 import requests
-from dotenv import load_dotenv
+from itertools import count
+
+from predict_rub_salary import predict_rub_salary
 
 
-load_dotenv()
-API_TOKEN = os.getenv('SUPERJOB_API_TOKEN')
-
-
-def get_vacancies(language , id_city=4, page=0):
+def get_vacancies(language, api_token_superjob, page=0, id_city=4):
     superjob_url = "https://api.superjob.ru/2.0/vacancies/"
     headers = {
-        "X-Api-App-Id": f"{API_TOKEN}"
+        "X-Api-App-Id": f"{api_token_superjob}"
     }
     params = {
-        "page":page,
-        "town":id_city,
-        "keyword":f"Разработчик {language}",
-        "count":100,
+        "page": page,
+        "town": id_city,
+        "keyword": f"Разработчик {language}",
+        "count": 100,
     }
+
     response = requests.get(superjob_url, headers=headers, params=params)
     response.raise_for_status()
-
     return response.json()
 
 
-def get_salary_info(language):
-    salares = []
-    vacancies_found = 0
-    for page in range(5):
-        vacances = get_vacancies(language, page=page)["objects"]
-        vacancies_found += len(vacances)
-        for vacancy in vacances:
-            try:
-                salares.append(predict_rub_salary(vacancy))
-            except TypeError:
-                pass
-    salares = [salary for salary in salares if salary is not None]
-    return salares ,vacancies_found
+
+def get_language_characteristic(language, api_token_superjob):
+    salaries = []
+    for page in count(0):
+        vacancies = get_vacancies(language, api_token_superjob, page)
+        if not vacancies['more']:
+            break
+        for vacancy in vacancies["objects"]:
+            if not vacancy["currency"] == "rub":
+                continue
+            if vacancy["payment_from"] == 0 and vacancy["payment_to"] == 0:
+                continue
+
+            salaries.append(predict_rub_salary(vacancy["payment_from"], vacancy["payment_to"]))
+        salaries = [salary for salary in salaries if salary is not None]
+
+    sum_salaries = sum(salaries)
+    counts = len(salaries)
+    if salaries:
+        average_salary = int(sum_salaries / counts)
+    else:
+        average_salary=0
+    language_characteristic={
+        "vacancies_found":vacancies["total"],
+        "vacancies_processed": counts,
+        "average_salary": average_salary,
+    }
+
+    return language_characteristic
 
 
-def count_average_salary(language):
-    salares, vacancies_found = get_salary_info(language)
-    sum_salares = sum(salares)
-    count= len(salares)
-    average_salary = sum_salares/count
-    return average_salary, count , vacancies_found
-
-
-def predict_rub_salary(vacancy):
-    if vacancy["currency"] == "rub" and vacancy["payment_from"] !=0 :
-        return vacancy["payment_from"]
-
-
-def get_statistics_vacancies(languages):
-    languages_stats ={}
-
-    for language in languages:
-        average, average_count, vacancies_found = count_average_salary(language)
-        average = int(average)
-        languages_stats[language] = {
-            "vacancies_found": vacancies_found,
-            "vacancies_processed": average_count,
-            "average_salary": average,
-        }
-    return languages_stats
+def get_statistics_vacancies(languages, api_token_superjob):
+    languages_stats = {}
+    try:
+        for language in languages:
+            languages_stats[language] = get_language_characteristic(language, api_token_superjob)
+        return languages_stats
+    except requests.exceptions.ConnectionError:
+        sleep(20)

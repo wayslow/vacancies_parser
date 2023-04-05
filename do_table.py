@@ -1,9 +1,20 @@
+import os
+
+from dotenv import load_dotenv
 from terminaltables import DoubleTable
 
-import superjob, hhru
+import hhru
+import superjob
+
+
 def do_table(languages_stats, title):
     table_data = [
-        ["languages", "vacancies_found", "vacancies_processed", "average_salary"],
+        [
+             "languages",
+             "vacancies_found",
+             "vacancies_processed",
+             "average_salary"
+         ],
     ]
     for language in languages_stats:
         language_stats = [language]
@@ -13,11 +24,13 @@ def do_table(languages_stats, title):
 
     table_instance = DoubleTable(table_data, title)
     table_instance.justify_columns[2] = 'right'
-    print(table_instance.table)
-    print()
+    return table_instance.table
 
 
 def main():
+    load_dotenv()
+    api_token_superjob = os.getenv('SUPERJOB_API_TOKEN')
+
     languages = [
         "Objective-C",
         "GO",
@@ -30,10 +43,11 @@ def main():
         "Java",
         "JavaScript",
     ]
-    superjob_statistics=superjob.get_statistics_vacancies(languages)
-    hhru_statistics=hhru.get_statistics_vacancies(languages)
-    do_table(superjob_statistics, "superjob")
-    do_table(hhru_statistics, "hh.ru")
+    superjob_statistics = superjob.get_statistics_vacancies(languages, api_token_superjob)
+    hhru_statistics = hhru.get_statistics_vacancies(languages)
+
+    print(do_table(superjob_statistics, "superjob"))
+    print(do_table(hhru_statistics, "hh.ru"))
 
 
 if __name__ == '__main__':
