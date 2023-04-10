@@ -1,7 +1,7 @@
 from time import sleep
+from itertools import count
 
 import requests
-from itertools import count
 
 from predict_rub_salary import predict_rub_salary
 
