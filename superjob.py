@@ -6,14 +6,14 @@ import requests
 from predict_rub_salary import predict_rub_salary
 
 
-def get_vacancies(language, api_token_superjob, page=0, id_city=4):
+def get_vacancies(language, api_token_superjob, page=0, city_id=4):
     superjob_url = "https://api.superjob.ru/2.0/vacancies/"
     headers = {
         "X-Api-App-Id": f"{api_token_superjob}"
     }
     params = {
         "page": page,
-        "town": id_city,
+        "town": city_id,
         "keyword": f"Разработчик {language}",
         "count": 100,
     }
@@ -56,9 +56,7 @@ def get_language_characteristic(language, api_token_superjob):
 
 def get_statistics_vacancies(languages, api_token_superjob):
     languages_stats = {}
-    try:
-        for language in languages:
-            languages_stats[language] = get_language_characteristic(language, api_token_superjob)
-        return languages_stats
-    except requests.exceptions.ConnectionError:
-        sleep(20)
+
+    for language in languages:
+        languages_stats[language] = get_language_characteristic(language, api_token_superjob)
+    return languages_stats

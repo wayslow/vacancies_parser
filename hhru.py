@@ -3,29 +3,20 @@ from time import sleep
 import requests
 from itertools import count
 
-import predict_rub_salary
+from predict_rub_salary import predict_rub_salary
 
 
-def get_vacancies(language, id_city=1, page=0):
+def get_vacancies(language, city_id=1, page=0):
     hh_url = "https://api.hh.ru/vacancies"
     params = {
         "text": language,
-        "area": id_city,
+        "area": city_id,
         "per_page": 100,
         'page': page
     }
     response = requests.get(hh_url, params=params)
     response.raise_for_status()
     return response.json()
-
-
-def predict_rub_salary(payment_from, payment_to):
-    if payment_from and payment_to:
-        return (payment_from + payment_to) / 2
-    elif payment_from:
-        return payment_from * 1.2
-    elif payment_to:
-        return payment_to * 0.8
 
 
 def get_language_characteristic(language):
@@ -39,7 +30,6 @@ def get_language_characteristic(language):
                 continue
             if not vacancy["salary"]["currency"] == "RUR":
                 continue
-
             pred = predict_rub_salary(vacancy["salary"]["from"], vacancy["salary"]["to"])
             salaries.append(pred)
     salaries = [salary for salary in salaries if salary is not None]
