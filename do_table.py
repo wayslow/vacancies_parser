@@ -9,7 +9,7 @@ import superjob
 
 
 def do_table(languages_stats, title):
-    keyes = [
+    keys = [
              "vacancies_found",
              "vacancies_processed",
              "average_salary"
@@ -24,7 +24,7 @@ def do_table(languages_stats, title):
     ]
     for language in languages_stats:
         language_stats = [language]
-        for key in keyes:
+        for key in keys:
             language_stats.append(languages_stats[language][key])
         table.append(language_stats)
 
