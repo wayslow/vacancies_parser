@@ -34,7 +34,6 @@ def do_table(languages_stats, title):
 
 
 def main():
-    global hhru_statistics
     load_dotenv()
     api_token_superjob = os.getenv('SUPERJOB_API_TOKEN')
 
@@ -53,11 +52,12 @@ def main():
     superjob_statistics = superjob.get_statistics_vacancies(languages, api_token_superjob)
     try:
         hhru_statistics = hhru.get_statistics_vacancies(languages)
+        print(do_table(superjob_statistics, "superjob"))
+        print(do_table(hhru_statistics, "hh.ru"))
     except requests.exceptions.ConnectionError:
         sleep(20)
 
-    print(do_table(superjob_statistics, "superjob"))
-    print(do_table(hhru_statistics, "hh.ru"))
+
 
 
 if __name__ == '__main__':
